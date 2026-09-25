@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OmniData Forge — Enterprise Intelligence Suite</title>
+<style>
+:root{
+  --bg:#020617;--card:rgba(15,23,42,.75);--card-solid:#0f172a;
+  --border:rgba(148,163,184,.14);--border-strong:rgba(148,163,184,.28);
+  --text:#f1f5f9;--dim:#94a3b8;
+  --cyan:#06b6d4;--violet:#8b5cf6;--emerald:#10b981;--amber:#f59e0b;--rose:#f43f5e;
+  --r:12px;--r-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh}
+.hidden{display:none !important}
+.app{display:flex;min-height:100vh}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:4px}
+.sidebar{width:250px;flex-shrink:0;background:var(--card);backdrop-filter:blur(20px);border-inline-end:1px solid var(--border);
+  padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.logo{display:flex;align-items:center;gap:10px;padding:8px 8px 18px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--cyan),var(--violet));display:grid;place-items:center;font-size:18px}
+.logo-title{font-size:14px;font-weight:900}
+.logo-sub{font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-sm);color:var(--dim);
+  font-size:13px;font-weight:700;cursor:pointer;border:1px solid transparent}
+.nav-item:hover{background:rgba(148,163,184,.08);color:var(--text)}
+.nav-item.active{background:rgba(6,182,212,.14);color:var(--cyan);border-color:rgba(6,182,212,.3)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{height:60px;background:var(--card);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;padding:0 20px}
+.role-pill{padding:4px 10px;border-radius:14px;font-size:10px;font-weight:800;background:rgba(6,182,212,.12);color:var(--cyan);border:1px solid rgba(6,182,212,.3)}
+.views{flex:1;padding:22px;overflow-y:auto}
+.view{display:none}.view.active{display:block}
+.view-title{font-size:20px;font-weight:900;margin-bottom:2px}
+.view-sub{font-size:12px;color:var(--dim);margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px}
+.card-title{font-size:12.5px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:"";width:3px;height:13px;background:var(--cyan);border-radius:2px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.kpi-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;font-weight:700}
+.kpi-value{font-size:26px;font-weight:900;font-family:ui-monospace,monospace;margin-top:4px}
+.grid-2{display:grid;grid-template-columns:1fr 1.3fr;gap:14px}
+@media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+.btn{background:linear-gradient(135deg,var(--cyan),#0891b2);color:#020617;border:none;padding:9px 16px;border-radius:var(--r-sm);
+  font-weight:800;cursor:pointer;font-size:12px}
+.btn.secondary{background:transparent;border:1px solid var(--border-strong);color:var(--text)}
+.btn.sm{padding:6px 11px;font-size:11px}
+.btn.danger{background:linear-gradient(135deg,var(--rose),#e11d48);color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+textarea,.input{width:100%;background:rgba(2,6,23,.5);border:1px solid var(--border);color:var(--text);padding:10px 12px;
+  border-radius:var(--r-sm);outline:none;font-size:12.5px}
+textarea{min-height:160px;font-family:ui-monospace,monospace;resize:vertical}
+select.input{cursor:pointer}
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:var(--r-sm);max-height:480px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:rgba(15,23,42,.95);color:var(--dim);padding:9px 10px;position:sticky;top:0;text-align:start;
+  font-weight:800;font-size:10px;text-transform:uppercase}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+.mono{font-family:ui-monospace,monospace;font-size:11px;word-break:break-all}
+.pill{padding:2px 8px;border-radius:6px;font-size:9px;font-weight:900;border:1px solid;text-transform:uppercase;display:inline-block}
+.pill.critical{background:rgba(244,63,94,.15);color:#fb7185;border-color:rgba(244,63,94,.35)}
+.pill.high{background:rgba(245,158,11,.15);color:#fbbf24;border-color:rgba(245,158,11,.35)}
+.pill.medium{background:rgba(139,92,246,.15);color:#a78bfa;border-color:rgba(139,92,246,.35)}
+.pill.low{background:rgba(6,182,212,.15);color:#22d3ee;border-color:rgba(6,182,212,.35)}
+.pill.ok{background:rgba(16,185,129,.15);color:#34d399;border-color:rgba(16,185,129,.35)}
+.pill.warn{background:rgba(244,63,94,.15);color:#fb7185;border-color:rgba(244,63,94,.35)}
+.empty{text-align:center;padding:30px;color:var(--dim);font-size:12px}
+.toast{position:fixed;bottom:20px;inset-inline-end:20px;background:var(--card-solid);border:1px solid var(--border-strong);
+  border-radius:var(--r-sm);padding:11px 16px;font-size:12px;z-index:2000;max-width:360px}
+.form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.form-label{font-size:10.5px;font-weight:800;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
+.login-shell{display:flex;align-items:center;justify-content:center;min-height:100vh;width:100%}
+.login-card{width:min(380px,92vw);background:var(--card);border:1px solid var(--border-strong);border-radius:16px;padding:28px}
+.note{font-size:11px;color:var(--dim);line-height:1.6;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.2);
+  padding:10px 12px;border-radius:var(--r-sm);margin-bottom:14px}
+.confidence-bar{width:60px;height:4px;background:rgba(148,163,184,.2);border-radius:2px;overflow:hidden;display:inline-block;margin-inline-start:6px}
+.confidence-bar div{height:100%;background:var(--cyan)}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab{padding:7px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);color:var(--dim)}
+.tab.active{background:rgba(6,182,212,.15);border-color:var(--cyan);color:var(--cyan)}
+</style>
+</head>
+<body>
+
+<div id="loginShell" class="login-shell">
+  <div class="login-card">
+    <div class="logo" style="border:none;margin:0 0 18px;padding:0">
+      <div class="logo-icon">⚡</div>
+      <div><div class="logo-title">OmniData Forge</div><div class="logo-sub">Enterprise Intelligence Suite</div></div>
+    </div>
+    <div id="loginTabs" class="tabs">
+      <div class="tab active" data-mode="login" onclick="setAuthMode('login')">تسجيل الدخول</div>
+      <div class="tab" data-mode="bootstrap" onclick="setAuthMode('bootstrap')">إعداد أول مسؤول</div>
+    </div>
+    <div id="bootstrapNote" class="note hidden">
+      هذا يُنشئ أول حساب Admin ومساحة عمل جديدة. متاح مرة واحدة فقط — بعدها يُستخدم تسجيل الدخول العادي.
+    </div>
+    <div id="fullNameRow" class="form-row hidden">
+      <label class="form-label">الاسم الكامل</label>
+      <input class="input" id="authFullName" placeholder="Sarah Ahmed">
+    </div>
+    <div class="form-row">
+      <label class="form-label">البريد الإلكتروني</label>
+      <input class="input" id="authEmail" placeholder="admin@company.com">
+    </div>
+    <div class="form-row">
+      <label class="form-label">كلمة المرور</label>
+      <input class="input" id="authPassword" type="password" placeholder="••••••••••">
+    </div>
+    <div class="form-row">
+      <label class="form-label">عنوان الخادم (API)</label>
+      <input class="input" id="apiBase" value="http://localhost:8000">
+    </div>
+    <button class="btn" style="width:100%" id="authSubmitBtn" onclick="submitAuth()">دخول</button>
+    <div id="authError" style="color:#fb7185;font-size:11px;margin-top:10px"></div>
+  </div>
+</div>
+
+<div id="appShell" class="app hidden">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div><div class="logo-title">OmniData Forge</div><div class="logo-sub">v5.0 · Live API</div></div>
+    </div>
+    <div class="nav-item active" data-view="dashboard" onclick="showView('dashboard')">🎯 لوحة القيادة</div>
+    <div class="nav-item" data-view="analyzer" onclick="showView('analyzer')">🔍 المحلل</div>
+    <div class="nav-item" data-view="cases" onclick="showView('cases')">🗂️ القضايا</div>
+    <div class="nav-item" data-view="watchlist" onclick="showView('watchlist')">👁️ قائمة المراقبة</div>
+    <div class="nav-item" data-view="rules" onclick="showView('rules')">🧪 القواعد المخصصة</div>
+    <div class="nav-item" data-view="audit" onclick="showView('audit')">📜 سجل التدقيق</div>
+    <div class="nav-item" data-view="settings" onclick="showView('settings')">⚙️ الإعدادات</div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <span class="role-pill" id="roleBadge">—</span>
+      <span style="font-size:12px;color:var(--dim)" id="userBadge"></span>
+      <div style="margin-inline-start:auto;display:flex;gap:10px;align-items:center">
+        <span style="font-size:10px;color:var(--dim)" id="apiBaseLabel"></span>
+        <button class="btn secondary sm" onclick="logout()">خروج</button>
+      </div>
+    </header>
+    <div class="views">
+
+      <section class="view active" id="view-dashboard">
+        <div class="view-title">لوحة القيادة</div>
+        <div class="view-sub">كل الأرقام هنا محسوبة من بيانات فعلية عبر الـ API — لا توجد قيم ثابتة أو وهمية.</div>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi-label">إجمالي الكيانات المكتشفة</div><div class="kpi-value" id="kpiTotal" style="color:var(--cyan)">0</div></div>
+          <div class="kpi"><div class="kpi-label">حرجة + مرتفعة</div><div class="kpi-value" id="kpiCritical" style="color:var(--rose)">0</div></div>
+          <div class="kpi"><div class="kpi-label">قضايا نشطة</div><div class="kpi-value" id="kpiCases" style="color:var(--amber)">0</div></div>
+          <div class="kpi"><div class="kpi-label">حالة سجل التدقيق</div><div class="kpi-value" id="kpiAudit" style="font-size:16px;color:var(--emerald)">—</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">أعلى النتائج خطورة (آخر مسح)</div>
+          <div class="table-wrap"><table><thead><tr><th>النوع</th><th>القيمة</th><th>الخطورة</th><th>الثقة</th></tr></thead>
+          <tbody id="dashTopBody"><tr><td colspan="4" class="empty">لا توجد بيانات بعد — شغّل تحليلاً من المحلل.</td></tr></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-analyzer">
+        <div class="view-title">المحلل الجنائي للوثائق</div>
+        <div class="view-sub">كشف بـ regex + entropy scoring + مطابقة سياقية — لا يعتمد على أنماط ثابتة فقط.</div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">الإدخال</div>
+            <textarea id="scanInput" placeholder="الصق نصاً، سجلاً، أو كود..."></textarea>
+            <div style="display:flex;gap:8px;margin-top:12px">
+              <button class="btn" id="scanBtn" onclick="runScan()">⚡ تشغيل التحليل</button>
+              <button class="btn secondary" onclick="loadSample()">🎲 نموذج</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">النتائج <span id="scanCount" style="color:var(--dim);font-weight:600"></span></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>الخطورة</th><th>النوع</th><th>القيمة</th><th>الثقة</th><th>السياق</th></tr></thead>
+              <tbody id="scanBody"><tr><td colspan="5" class="empty">لا توجد نتائج بعد.</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-cases">
+        <div class="view-title">إدارة القضايا</div>
+        <div class="view-sub">SLA تُحسب تلقائياً من أولوية القضية عند الإنشاء (4h حرجة / 24h مرتفعة / 72h متوسطة / 168h منخفضة).</div>
+        <div class="card">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <input class="input" id="newCaseTitle" placeholder="عنوان القضية" style="flex:2">
+            <select class="input" id="newCasePriority" style="flex:1">
+              <option value="critical">critical</option><option value="high">high</option>
+              <option value="medium" selected>medium</option><option value="low">low</option>
+            </select>
+            <button class="btn sm" onclick="createCase()">+ إضافة</button>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>العنوان</th><th>الأولوية</th><th>الحالة</th><th>SLA</th><th></th></tr></thead>
+            <tbody id="casesBody"><tr><td colspan="5" class="empty">لا توجد قضايا.</td></tr></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-watchlist">
+        <div class="view-title">قائمة المراقبة المؤسسية</div>
+        <div class="view-sub">مؤشرات تضيفها أنت — تُخزَّن على الخادم وتُطبَّق لكل مستخدمي مساحة العمل.</div>
+        <div class="card">
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <input class="input" id="newWatchValue" placeholder="IP / Domain / Hash / Key..." style="flex:2">
+            <select class="input" id="newWatchSeverity" style="flex:1">
+              <option value="critical">critical</option><option value="high" selected>high</option>
+              <option value="medium">medium</option><option value="low">low</option>
+            </select>
+            <button class="btn sm" onclick="addWatch()">+ إضافة</button>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>القيمة</th><th>المصدر</th><th>الخطورة</th><th></th></tr></thead>
+            <tbody id="watchBody"><tr><td colspan="4" class="empty">لا توجد مؤشرات.</td></tr></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="view-rules">
+        <div class="view-title">محرك القواعد المخصصة</div>
+        <div class="view-sub">قواعد Regex خاصة بمؤسستك — تُطبَّق تلقائياً في كل عملية تحليل قادمة.</div>
+        <div class="card">
+          <div class="form-row"><label class="form-label">اسم القاعدة</label><input class="input" id="ruleName" placeholder="Internal Employee ID"></div>
+          <div class="form-row"><label class="form-label">Regex</label><input class="input mono" id="ruleRegex" placeholder="\bEMP-\d{6}\b"></div>
+          <div style="display:flex;gap:8px">
+            <select class="input" id="ruleRisk" style="flex:1">
+              <option value="critical">critical</option><option value="high">high</option>
+              <option value="medium" selected>medium</option><option value="low">low</option>
+            </select>
+            <button class="btn sm" onclick="createRule()">+ حفظ القاعدة</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">القواعد المُعرّفة</div>
+          <div class="table-wrap"><table><thead><tr><th>الاسم</th><th>Regex</th><th>الخطورة</th><th>مفعّلة</th><th></th></tr></thead>
+          <tbody id="rulesBody"><tr><td colspan="5" class="empty">لا توجد قواعد بعد.</td></tr></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-audit">
+        <div class="view-title">سجل التدقيق المشفّر (HMAC Chain)</div>
+        <div class="view-sub">السلسلة موقّعة بمفتاح لا يغادر الخادم — التحقق يُعاد حسابه فعلياً على الخادم، وليس بجافاسكربت المتصفح.</div>
+        <div class="card" style="display:flex;align-items:center;gap:14px">
+          <button class="btn sm" onclick="verifyAudit()">🔒 تحقق من سلامة السلسلة الآن</button>
+          <span id="auditStatus" style="font-size:12px"></span>
+        </div>
+        <div class="card">
+          <div class="table-wrap"><table><thead><tr><th>#</th><th>الوقت</th><th>المستخدم</th><th>الإجراء</th><th>التفاصيل</th><th>Hash</th></tr></thead>
+          <tbody id="auditBody"><tr><td colspan="6" class="empty">لا توجد سجلات.</td></tr></tbody></table></div>
+        </div>
+      </section>
+
+      <section class="view" id="view-settings">
+        <div class="view-title">الإعدادات</div>
+        <div class="card" id="usersCard">
+          <div class="card-title">👥 المستخدمون (Admin فقط)</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+            <input class="input" id="newUserEmail" placeholder="email@company.com" style="flex:2">
+            <input class="input" id="newUserName" placeholder="الاسم الكامل" style="flex:2">
+            <input class="input" id="newUserPass" placeholder="كلمة مرور (10+ أحرف)" type="password" style="flex:2">
+            <select class="input" id="newUserRole" style="flex:1">
+              <option value="analyst">analyst</option><option value="auditor">auditor</option>
+              <option value="viewer">viewer</option><option value="admin">admin</option>
+            </select>
+            <button class="btn sm" onclick="createUser()">+ إضافة</button>
+          </div>
+          <div class="table-wrap"><table><thead><tr><th>الاسم</th><th>البريد</th><th>الدور</th><th>الحالة</th></tr></thead>
+          <tbody id="usersBody"><tr><td colspan="4" class="empty">—</td></tr></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🛡️ تكامل استخبارات التهديدات (AbuseIPDB)</div>
+          <div class="note">بدون مفتاح API هنا، أي فحص IP سيُعيد صراحةً "غير مفعّل" — لا بيانات وهمية أبداً.</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input class="input" id="abuseKey" placeholder="AbuseIPDB API Key" style="flex:2">
+            <button class="btn sm" onclick="saveIntegration()">💾 حفظ</button>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input class="input" id="checkIp" placeholder="185.220.101.45" style="flex:2">
+            <button class="btn secondary sm" onclick="checkIpNow()">فحص IP</button>
+          </div>
+          <div id="ipResult" style="margin-top:10px;font-size:12px"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let API = localStorage.getItem('omnidata_api') || 'http://localhost:8000';
+let TOKEN = sessionStorage.getItem('omnidata_token') || '';
+let ROLE = sessionStorage.getItem('omnidata_role') || '';
+let USERNAME = sessionStorage.getItem('omnidata_name') || '';
+let lastFindings = [];
+
+function showToast(msg, isError){
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.borderColor = isError ? 'rgba(244,63,94,.5)' : 'var(--border-strong)';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+async function api(path, opts = {}){
+  const headers = Object.assign({'Content-Type':'application/json'}, opts.headers || {});
+  if(TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
+  const res = await fetch(API + path, Object.assign({}, opts, { headers }));
+  if(res.status === 401){ logout(); throw new Error('انتهت الجلسة'); }
+  let data = null;
+  try{ data = await res.json(); }catch(e){}
+  if(!res.ok){ throw new Error((data && data.detail) || ('HTTP ' + res.status)); }
+  return data;
+}
+
+function setAuthMode(mode){
+  document.querySelectorAll('#loginTabs .tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  document.getElementById('bootstrapNote').classList.toggle('hidden', mode !== 'bootstrap');
+  document.getElementById('fullNameRow').classList.toggle('hidden', mode !== 'bootstrap');
+  document.getElementById('authSubmitBtn').textContent = mode === 'bootstrap' ? 'إنشاء المسؤول' : 'دخول';
+  document.getElementById('authSubmitBtn').dataset.mode = mode;
+}
+setAuthMode('login');
+
+async function submitAuth(){
+  API = document.getElementById('apiBase').value.trim().replace(/\/$/, '');
+  localStorage.setItem('omnidata_api', API);
+  const mode = document.getElementById('authSubmitBtn').dataset.mode || 'login';
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  try{
+    let data;
+    if(mode === 'bootstrap'){
+      const full_name = document.getElementById('authFullName').value.trim();
+      data = await api('/auth/bootstrap', { method:'POST', body: JSON.stringify({ email, full_name, password, role:'admin' }) });
+    } else {
+      data = await api('/auth/login', { method:'POST', body: JSON.stringify({ email, password }) });
+    }
+    TOKEN = data.access_token; ROLE = data.role; USERNAME = data.full_name;
+    sessionStorage.setItem('omnidata_token', TOKEN);
+    sessionStorage.setItem('omnidata_role', ROLE);
+    sessionStorage.setItem('omnidata_name', USERNAME);
+    enterApp();
+  }catch(e){ errEl.textContent = e.message; }
+}
+
+function logout(){
+  TOKEN = ''; sessionStorage.clear();
+  document.getElementById('appShell').classList.add('hidden');
+  document.getElementById('loginShell').classList.remove('hidden');
+}
+
+function enterApp(){
+  document.getElementById('loginShell').classList.add('hidden');
+  document.getElementById('appShell').classList.remove('hidden');
+  document.getElementById('roleBadge').textContent = ROLE;
+  document.getElementById('userBadge').textContent = USERNAME;
+  document.getElementById('apiBaseLabel').textContent = API;
+  document.getElementById('usersCard').classList.toggle('hidden', ROLE !== 'admin');
+  loadDashboard(); loadCases(); loadWatchlist(); loadRules(); loadAudit();
+  if(ROLE === 'admin') loadUsers();
+}
+
+function showView(view){
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === view));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+}
+
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+function pillHtml(risk){ return `<span class="pill ${esc(risk)}">${esc(risk)}</span>`; }
+
+/* ---------- Dashboard ---------- */
+async function loadDashboard(){
+  try{
+    const findings = await api('/scan');
+    const cases = await api('/cases');
+    lastFindings = findings;
+    document.getElementById('kpiTotal').textContent = findings.length;
+    document.getElementById('kpiCritical').textContent = findings.filter(f => f.risk==='critical'||f.risk==='high').length;
+    document.getElementById('kpiCases').textContent = cases.filter(c => c.status !== 'CLOSED').length;
+    const top = findings.slice(0, 8);
+    document.getElementById('dashTopBody').innerHTML = top.length ? top.map(f => `
+      <tr><td style="font-weight:700;color:var(--cyan)">${esc(f.type)}</td>
+      <td class="mono">${esc(f.value.slice(0,40))}</td><td>${pillHtml(f.risk)}</td><td>${f.confidence}%</td></tr>`).join('')
+      : '<tr><td colspan="4" class="empty">لا توجد بيانات بعد.</td></tr>';
+    try{
+      const v = await api('/audit/verify');
+      document.getElementById('kpiAudit').textContent = v.valid ? '🔒 سليمة' : '⚠️ مكسورة';
+      document.getElementById('kpiAudit').style.color = v.valid ? 'var(--emerald)' : 'var(--rose)';
+    }catch(e){ document.getElementById('kpiAudit').textContent = '—'; }
+  }catch(e){ showToast(e.message, true); }
+}
+
+/* ---------- Analyzer ---------- */
+function loadSample(){
+  document.getElementById('scanInput').value =
+`AWS_ACCESS_KEY_ID = AKIAIOSFODNN7EXAMPLE
+password = "P@ssw0rd!2024"
+contact: sarah@acme.com
+CVE-2024-3094 disclosed
+card on file: 4539 1488 0343 6467
+random 32-char hex, not a secret: deadbeefdeadbeefdeadbeefdeadbeef`;
+}
+async function runScan(){
+  const text = document.getElementById('scanInput').value;
+  if(!text.trim()){ showToast('أدخل نصاً أولاً', true); return; }
+  const btn = document.getElementById('scanBtn'); btn.disabled = true;
+  try{
+    const res = await api('/scan', { method:'POST', body: JSON.stringify({ text, source_label:'pasted-text' }) });
+    document.getElementById('scanCount').textContent = '(' + res.total + ')';
+    document.getElementById('scanBody').innerHTML = res.findings.length ? res.findings.map(f => `
+      <tr><td>${pillHtml(f.risk)}</td>
+      <td style="font-weight:700;color:var(--cyan)">${esc(f.type)}</td>
+      <td class="mono">${esc(f.value)}</td>
+      <td>${f.confidence}%<span class="confidence-bar"><div style="width:${f.confidence}%"></div></span></td>
+      <td style="color:var(--dim);font-size:11px">${esc(f.context)}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="empty">لا توجد نتائج.</td></tr>';
+    showToast('تم التحليل — ' + res.total + ' كيان');
+    loadDashboard();
+  }catch(e){ showToast(e.message, true); }
+  btn.disabled = false;
+}
+
+/* ---------- Cases ---------- */
+async function loadCases(){
+  try{
+    const cases = await api('/cases');
+    document.getElementById('casesBody').innerHTML = cases.length ? cases.map(c => {
+      const slaLeft = c.sla_at ? Math.round((new Date(c.sla_at) - new Date())/3600000) : null;
+      const slaLabel = c.status==='CLOSED' ? '—' : (slaLeft===null ? '—' : (slaLeft<0 ? Math.abs(slaLeft)+'h متأخر' : slaLeft+'h'));
+      return `<tr><td style="font-weight:700">${esc(c.title)}</td><td>${pillHtml(c.priority)}</td>
+        <td><select class="input" style="padding:4px 8px;font-size:11px" onchange="updateCaseStatus('${c.id}', this.value)">
+          ${['NEW','TRIAGE','INVESTIGATING','CONTAINED','CLOSED'].map(s => `<option value="${s}" ${c.status===s?'selected':''}>${s}</option>`).join('')}
+        </select></td>
+        <td class="mono" style="font-size:11px">${esc(slaLabel)}</td>
+        <td><button class="btn danger sm" onclick="deleteCase('${c.id}')">🗑️</button></td></tr>`;
+    }).join('') : '<tr><td colspan="5" class="empty">لا توجد قضايا.</td></tr>';
+  }catch(e){ showToast(e.message, true); }
+}
+async function createCase(){
+  const title = document.getElementById('newCaseTitle').value.trim();
+  if(!title){ showToast('العنوان مطلوب', true); return; }
+  const priority = document.getElementById('newCasePriority').value;
+  try{
+    await api('/cases', { method:'POST', body: JSON.stringify({ title, priority, status:'NEW' }) });
+    document.getElementById('newCaseTitle').value = '';
+    loadCases(); loadDashboard();
+    showToast('تم إنشاء القضية');
+  }catch(e){ showToast(e.message, true); }
+}
+async function updateCaseStatus(id, status){
+  try{ await api('/cases/' + id, { method:'PATCH', body: JSON.stringify({ status }) }); loadDashboard(); }
+  catch(e){ showToast(e.message, true); loadCases(); }
+}
+async function deleteCase(id){
+  if(!confirm('حذف هذه القضية؟')) return;
+  try{ await api('/cases/' + id, { method:'DELETE' }); loadCases(); loadDashboard(); }
+  catch(e){ showToast(e.message, true); }
+}
+
+/* ---------- Watchlist ---------- */
+async function loadWatchlist(){
+  try{
+    const items = await api('/watchlist');
+    document.getElementById('watchBody').innerHTML = items.length ? items.map(w => `
+      <tr><td class="mono">${esc(w.value)}</td><td style="color:var(--dim);font-size:11px">${esc(w.source)}</td>
+      <td>${pillHtml(w.severity)}</td><td><button class="btn danger sm" onclick="removeWatch('${w.id}')">🗑️</button></td></tr>`).join('')
+      : '<tr><td colspan="4" class="empty">لا توجد مؤشرات.</td></tr>';
+  }catch(e){ showToast(e.message, true); }
+}
+async function addWatch(){
+  const value = document.getElementById('newWatchValue').value.trim();
+  if(!value){ showToast('القيمة مطلوبة', true); return; }
+  const severity = document.getElementById('newWatchSeverity').value;
+  try{
+    await api('/watchlist', { method:'POST', body: JSON.stringify({ value, severity, type:'Other', source:'Internal' }) });
+    document.getElementById('newWatchValue').value = '';
+    loadWatchlist();
+  }catch(e){ showToast(e.message, true); }
+}
+async function removeWatch(id){
+  try{ await api('/watchlist/' + id, { method:'DELETE' }); loadWatchlist(); }
+  catch(e){ showToast(e.message, true); }
+}
+
+/* ---------- Rules ---------- */
+async function loadRules(){
+  try{
+    const rules = await api('/rules');
+    document.getElementById('rulesBody').innerHTML = rules.length ? rules.map(r => `
+      <tr><td style="font-weight:700">${esc(r.name)}</td><td class="mono">${esc(r.regex)}</td><td>${pillHtml(r.risk)}</td>
+      <td><input type="checkbox" ${r.enabled?'checked':''} onchange="toggleRule('${r.id}', this.checked)"></td>
+      <td><button class="btn danger sm" onclick="deleteRule('${r.id}')">🗑️</button></td></tr>`).join('')
+      : '<tr><td colspan="5" class="empty">لا توجد قواعد.</td></tr>';
+  }catch(e){ showToast(e.message, true); }
+}
+async function createRule(){
+  const name = document.getElementById('ruleName').value.trim();
+  const regex = document.getElementById('ruleRegex').value.trim();
+  if(!name || !regex){ showToast('الاسم و Regex مطلوبان', true); return; }
+  const risk = document.getElementById('ruleRisk').value;
+  try{
+    await api('/rules', { method:'POST', body: JSON.stringify({ name, regex, risk, category:'custom' }) });
+    document.getElementById('ruleName').value = ''; document.getElementById('ruleRegex').value = '';
+    loadRules();
+    showToast('تمت إضافة القاعدة — ستُطبَّق في المسح القادم');
+  }catch(e){ showToast(e.message, true); }
+}
+async function toggleRule(id, enabled){
+  try{ await api('/rules/' + id + '/toggle?enabled=' + enabled, { method:'PATCH' }); }
+  catch(e){ showToast(e.message, true); loadRules(); }
+}
+async function deleteRule(id){
+  try{ await api('/rules/' + id, { method:'DELETE' }); loadRules(); }
+  catch(e){ showToast(e.message, true); }
+}
+
+/* ---------- Audit ---------- */
+async function loadAudit(){
+  try{
+    const logs = await api('/audit');
+    document.getElementById('auditBody').innerHTML = logs.length ? logs.map(l => `
+      <tr><td class="mono">${l.seq}</td><td class="mono" style="font-size:10px">${esc(l.created_at.replace('T',' ').slice(0,19))}</td>
+      <td>${esc(l.user_email)}</td><td><span class="pill low">${esc(l.action)}</span></td>
+      <td style="font-size:11px;color:var(--dim)">${esc(l.details)}</td>
+      <td class="mono" style="font-size:9px">${esc(l.hash.slice(0,14))}…</td></tr>`).join('')
+      : '<tr><td colspan="6" class="empty">لا توجد سجلات — أو دورك لا يملك صلاحية العرض.</td></tr>';
+  }catch(e){ /* auditor/admin only — silent for other roles */ }
+}
+async function verifyAudit(){
+  try{
+    const v = await api('/audit/verify');
+    document.getElementById('auditStatus').innerHTML = v.valid
+      ? `<span class="pill ok">🔒 السلسلة سليمة — ${v.entries_checked} سجل تم التحقق منه</span>`
+      : `<span class="pill warn">⚠️ السلسلة مكسورة عند التسلسل #${v.broken_at_seq}</span>`;
+  }catch(e){ showToast(e.message, true); }
+}
+
+/* ---------- Settings ---------- */
+async function loadUsers(){
+  try{
+    const users = await api('/auth/users');
+    document.getElementById('usersBody').innerHTML = users.map(u => `
+      <tr><td style="font-weight:700">${esc(u.full_name)}</td><td class="mono" style="color:var(--dim)">${esc(u.email)}</td>
+      <td>${pillHtml(u.role)}</td><td>${u.is_active ? '<span class="pill ok">فعّال</span>' : '<span class="pill warn">موقوف</span>'}</td></tr>`).join('');
+  }catch(e){ /* not admin */ }
+}
+async function createUser(){
+  const email = document.getElementById('newUserEmail').value.trim();
+  const full_name = document.getElementById('newUserName').value.trim();
+  const password = document.getElementById('newUserPass').value;
+  const role = document.getElementById('newUserRole').value;
+  if(!email || !full_name || password.length < 10){ showToast('تحقق من الحقول — كلمة المرور 10 أحرف على الأقل', true); return; }
+  try{
+    await api('/auth/users', { method:'POST', body: JSON.stringify({ email, full_name, password, role }) });
+    document.getElementById('newUserEmail').value=''; document.getElementById('newUserName').value=''; document.getElementById('newUserPass').value='';
+    loadUsers();
+    showToast('تم إنشاء المستخدم');
+  }catch(e){ showToast(e.message, true); }
+}
+async function saveIntegration(){
+  const api_key = document.getElementById('abuseKey').value.trim();
+  if(!api_key){ showToast('أدخل مفتاح API', true); return; }
+  try{
+    await api('/integrations/config', { method:'POST', body: JSON.stringify({ provider:'abuseipdb', api_key }) });
+    showToast('تم الحفظ');
+  }catch(e){ showToast(e.message, true); }
+}
+async function checkIpNow(){
+  const ip = document.getElementById('checkIp').value.trim();
+  if(!ip){ return; }
+  try{
+    const r = await api('/integrations/ip-check/' + encodeURIComponent(ip));
+    document.getElementById('ipResult').innerHTML = r.configured
+      ? `درجة الإساءة: <b>${r.abuse_score}%</b> · بلاغات: ${r.reports} · الدولة: ${esc(r.country||'—')}`
+      : `<span style="color:var(--dim)">${esc(r.note)}</span>`;
+  }catch(e){ showToast(e.message, true); }
+}
+
+/* ---------- Boot ---------- */
+document.getElementById('apiBase').value = API;
+if(TOKEN){ enterApp(); }
+</script>
+</body>
+</html>

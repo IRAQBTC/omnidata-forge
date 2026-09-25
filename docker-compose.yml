@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: omnidata
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set a real password in .env}
+      POSTGRES_DB: omnidata
+    volumes:
+      - omnidata_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U omnidata"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      OMNIDATA_ENV: production
+      OMNIDATA_DATABASE_URL: postgresql+psycopg2://omnidata:${POSTGRES_PASSWORD}@db:5432/omnidata
+      OMNIDATA_JWT_SECRET: ${JWT_SECRET:?set a random 32+ byte secret in .env}
+      OMNIDATA_AUDIT_KEY: ${AUDIT_KEY:?set a different random 32+ byte secret in .env}
+      OMNIDATA_TOKEN_TTL_MIN: "480"
+    ports:
+      - "8000:8000"
+
+  frontend:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+
+volumes:
+  omnidata_pgdata:
